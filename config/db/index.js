@@ -1,8 +1,12 @@
 const mongoose = require('mongoose');
+const dotenv = require("dotenv");
+
+dotenv.config();
+
 async function connect() {
     var db = null
     try {
-        await mongoose.connect("mongodb://localhost:27017/Phim", { // kết nối MongDB
+        await mongoose.connect(process.env.DATA_BASE_URL, { // kết nối MongDB
             useNewUrlParser: true,
             useUnifiedTopology: true,
             // useFindAndModify: false,
