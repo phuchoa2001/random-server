@@ -1,9 +1,10 @@
 const express = require('express')
-const puppeteer = require('puppeteer');
 const axios = require('axios').default;
-let ListAnimeApi = [];
 const db = require('./config/db')
 const app = express();
+
+const { GetList, GetId } = require("./common/GetList")
+const { GetTotal } = require("./common/GetTotal")
 
 const UserModel = require('./app/models/user');
 // 
@@ -12,84 +13,51 @@ let numberAll = 0;
 
 db.connect();
 
-app.get('/phuchoa00/All', async (req, res) => {
-    let startpage = 1;
-    let endpage = 71;
-    const browser = await puppeteer.launch({
-        headless: true,
-        slowMo: 30
-    });
-    const page = await browser.newPage();
-    await page.setViewport({
-        width: 1400,
-        height: 1000,
-    });
-    async function GetAll() {
-        await page.goto(`https://dichthuatphuongdong.com/tienich/random-vietnamese-profile.html`);
-        const User = await page.evaluate(() => {
-            const resultArr = {};
-            const Users = document.querySelectorAll('table.table.common-table tbody tr')
-            for (let i = 0; i < Users.length; i++) {
-                const item = Users[i];
-                const ItemArr = item.querySelectorAll("td");
-                const key = ItemArr[0].querySelector("span").innerText.replace(/\s/g, '');
-                const value = ItemArr[1].querySelector("strong").innerText;
-                resultArr[key] = value;
-            }
-            return resultArr;
-        })
-
-        const Info = await page.evaluate(() => {
-            const resultArr = {};
-            const Address = document.querySelectorAll('table.table')[1];
-            const Info = Address.querySelectorAll("tbody tr");
-            for (let i = 1; i < Info.length; i++) {
-                const item = Info[i];
-                const ItemArr = item.querySelectorAll("td");
-                const key = ItemArr[0].innerText.replace(/\s/g, '');
-                const value = ItemArr[1].querySelector("strong").innerText;
-                resultArr[key] = value;
-            }
-            return resultArr;
-        })
-        const Info2 = await page.evaluate(() => {
-            const resultArr = {};
-            const Address = document.querySelectorAll('table.table')[2];
-            const Info = Address.querySelectorAll("tbody tr");
-            for (let i = 1; i < Info.length; i++) {
-                const item = Info[i];
-                const ItemArr = item.querySelectorAll("td");
-                const key = ItemArr[0].innerText.replace(/\s/g, '');
-                const value = ItemArr[1].querySelector("strong").innerText;
-                resultArr[key] = value;
-            }
-            return resultArr;
-        })
-        const Info3 = await page.evaluate(() => {
-            const resultArr = {};
-            const Address = document.querySelectorAll('table.table')[3];
-            const Info = Address.querySelectorAll("tbody tr");
-            for (let i = 1; i < Info.length; i++) {
-                const item = Info[i];
-                const ItemArr = item.querySelectorAll("td");
-                const key = ItemArr[0].innerText.replace(/\s/g, '');
-                const value = ItemArr[1].querySelector("strong").innerText;
-                resultArr[key] = value;
-            }
-            return resultArr;
-        })
-        const Users = { ...User, ...Info, ...Info2, ...Info3 };
-        const post = new UserModel(Users);
-        post.save();
-        
-        setTimeout(() => {
-            console.log("numberAll :"  , numberAll )
-            numberAll++;
-            GetAll();
-        }, 2000);
-    }
-    GetAll();
+app.get("/", async (req, res) => {
+    const Total = await GetTotal(UserModel);
+    console.log("Total", Total);
+    res.send(`
+    <style>
+     h3 {
+        font-size: 30px;
+        text-align: center;
+        margin-top : 10px;
+     }
+     code , p {
+        font-size: 20px;
+        margin : 20px 0px;
+     }
+    </style>
+    <div class="infoVietName">
+    <h3>Tổng cộng thông tin người tiếng việt : ${Total}</h3>
+    <code>/random</code>
+    <p>Nhận ngẫu nhiên thông tin người tiếng việt</p>
+    <code>/list</code>
+    <p>Nhận một danh sách thông tin người tiếng việt</p>
+    <code>/list/:id</code>
+    <p>Nhận phần tử bằng id thông tin người tiếng việt</p>
+    </div>
+    `)
 })
-app.listen(process.env.PORT || 3001, () => {
+
+app.get('/list', async (req, res) => {
+    GetList(UserModel, res, req, "name", "name");
+})
+app.get('/random', async (req, res) => {
+    UserModel.count().exec(function (err, count) {
+        // Get a random entry
+        var random = Math.floor(Math.random() * count)
+        // Again query all users but only fetch one offset by our random #
+        UserModel.findOne().skip(random).exec(
+            function (err, result) {
+                // Tada! random user
+                console.log(result)
+            })
+    })
+})
+app.get('/list/:id', async (req, res) => {
+    GetId(UserModel, res, req, { _id: req.params.id });
+})
+app.listen(process.env.PORT || 3002, () => {
     console.log('Server đang chay tren cong ' + process.env.PORT);
 });
