@@ -34,14 +34,23 @@ app.get("/", async (req, res) => {
     <p>Nhận ngẫu nhiên thông tin người tiếng việt</p>
     <code>/list</code>
     <p>Nhận một danh sách thông tin người tiếng việt</p>
-    <code>/list/:id</code>
+    <p>Lưu ý : phần meta hỗ trợ phần trang</p>
+    <code>/list?search=timkiem</code>
+    <p>Chúng ta có thêm query : search để tìm kiếm Fullname cần tìm</p>
+    <code>/list?page_size=10</code>
+    <p>Chúng ta có thêm query : page_size để nhận số lượng cần lấy về</p>
+    <code>/list?page=1</code>
+    <p>Chúng ta có thêm query : page để nhận phân trang tiếp theo </p>
+    <code>/list?search=dangphuchoa&page=1&page_size=10</code>
+    <p>Có thể viết như trên</p>
+    <code>/list/:_id</code>
     <p>Nhận phần tử bằng id thông tin người tiếng việt</p>
     </div>
     `)
 })
 
 app.get('/list', async (req, res) => {
-    GetList(UserModel, res, req, "name", "name");
+    GetList(UserModel, res, req, "Fullname", "Fullname");
 })
 app.get('/random', async (req, res) => {
     UserModel.count().exec(function (err, count) {
@@ -51,7 +60,7 @@ app.get('/random', async (req, res) => {
         UserModel.findOne().skip(random).exec(
             function (err, result) {
                 // Tada! random user
-                console.log(result)
+                res.json(result);
             })
     })
 })

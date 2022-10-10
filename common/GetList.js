@@ -1,7 +1,7 @@
 
 async function GetList(Model, res, req, search1, search2) {
     const page = +req.query.page || 1;
-    const page_size = +req.query.page_size || 100;
+    const page_size = +req.query.page_size || 10;
     const search = req.query.search || null;
     const objectSearch = search ? {
         $or: [
@@ -9,8 +9,9 @@ async function GetList(Model, res, req, search1, search2) {
             { [search2]: { $regex: search, $options: "i" } },
         ],
     } : {};
-    await Model.countDocuments(objectSearch).then(async (count_documents) => {
-        await Model.find(objectSearch, function (err, data) {
+    console.log("objectSearch", objectSearch);
+    Model.countDocuments(objectSearch).then(async (count_documents) => {
+        Model.find(objectSearch, function (err, data) {
             res.json({
                 data: data,
                 meta: {
@@ -24,7 +25,7 @@ async function GetList(Model, res, req, search1, search2) {
 }
 
 async function GetId(Model, res, req, condition) {
-    await Model.findOne(condition, function (err, data) {
+    Model.findOne(condition, function (err, data) {
         if (err) {
             res.json(err)
         } else {
